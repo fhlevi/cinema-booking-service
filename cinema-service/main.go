@@ -18,9 +18,11 @@ func main() {
 	cinema := r.Group("/api/cinema")
 	{
 		cinema.GET("/studios", handlers.GetStudios)
+		cinema.GET("/studios/:id", handlers.GetStudioByID)
 		cinema.GET("/studios/:id/seats", handlers.GetStudioSeats)
 		cinema.POST("/seats/reserve", handlers.ReserveSeats)
 		cinema.POST("/seats/release", handlers.ReleaseSeats)
+		cinema.POST("/seats/details", handlers.GetSeatsByIDs)
 	}
 
 	r.GET("/health", func(c *gin.Context) {

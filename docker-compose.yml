@@ -1,51 +1,52 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: cinema_booking
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+  # postgres:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_DB: cinema_booking
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: password
+  #   ports:
+  #     - "5433:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
 
   auth-service:
     build: ./auth-service
     ports:
       - "3001:8080"
     environment:
-      DATABASE_URL: postgres://postgres:password@postgres:5432/cinema_booking?sslmode=disable
+      DATABASE_URL: postgres://postgres:levi@host.docker.internal:5432/cinema_booking?sslmode=disable
       JWT_SECRET: your-jwt-secret-key
       PORT: 8080
       GOOGLE_CLIENT_ID: "your-google-client-id.googleusercontent.com"
       GOOGLE_CLIENT_SECRET: "your-google-client-secret"
-    depends_on:
-      - postgres
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   cinema-service:
     build: ./cinema-service
     ports:
       - "3002:8080"
     environment:
-      DATABASE_URL: postgres://postgres:password@postgres:5432/cinema_booking?sslmode=disable
+      DATABASE_URL: postgres://postgres:levi@host.docker.internal:5432/cinema_booking?sslmode=disable
       PORT: 8080
-    depends_on:
-      - postgres
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   booking-service:
     build: ./booking-service
     ports:
       - "3003:8080"
     environment:
-      DATABASE_URL: postgres://postgres:password@postgres:5432/cinema_booking?sslmode=disable
+      DATABASE_URL: postgres://postgres:levi@host.docker.internal:5432/cinema_booking?sslmode=disable
       AUTH_SERVICE_URL: http://auth-service:8080
       CINEMA_SERVICE_URL: http://cinema-service:8080
       PORT: 8080
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
-      - postgres
       - auth-service
       - cinema-service
 

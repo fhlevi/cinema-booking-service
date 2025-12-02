@@ -66,3 +66,21 @@ func ReleaseSeats(seatIDs []uint) error {
 	result := database.DB.Model(&models.Seat{}).Where("id IN ?", seatIDs).Update("is_available", true)
 	return result.Error
 }
+
+func GetStudioByID(studioID uint) (*models.Studio, error) {
+	var studio models.Studio
+	result := database.DB.First(&studio, studioID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &studio, nil
+}
+
+func GetSeatsByIDs(seatIDs []uint) ([]models.Seat, error) {
+	var seats []models.Seat
+	result := database.DB.Where("id IN ?", seatIDs).Find(&seats)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return seats, nil
+}

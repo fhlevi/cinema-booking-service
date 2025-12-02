@@ -107,12 +107,45 @@ func ValidateQRCode(bookingCode string) (*models.Booking, error) {
 	return &booking, nil
 }
 
-func GetUserBookings(userID uint) ([]models.Booking, error) {
+func GetUserBookings(userID uint) ([]models.BookingWithDetails, error) {
 	var bookings []models.Booking
 	result := database.DB.Where("user_id = ?", userID).Order("created_at DESC").Find(&bookings)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	return bookings, nil
+	var bookingsWithDetails []models.BookingWithDetails
+
+	for _, booking := range bookings {
+		studio, err := utils.GetStudioDetails(booking.StudioID)
+		if err != nil {
+			fmt.Printf("Failed to get studio details for booking %s: %v\n", booking.BookingCode, err)
+		}
+
+		var seats []models.SeatDetails
+		if len(booking.SeatIDs) > 0 {
+			seats, err = utils.GetSeatsDetails(booking.SeatIDs)
+			if err != nil {
+				fmt.Printf("Failed to get seat details for booking %s: %v\n", booking.BookingCode, err)
+			}
+		}
+
+		bookingDetail := models.BookingWithDetails{
+			ID:          booking.ID,
+			BookingCode: booking.BookingCode,
+			UserID:      booking.UserID,
+			UserName:    booking.UserName,
+			UserEmail:   booking.UserEmail,
+			QRCode:      booking.QRCode,
+			BookingType: booking.BookingType,
+			Status:      booking.Status,
+			CreatedAt:   booking.CreatedAt,
+			UpdatedAt:   booking.UpdatedAt,
+			Studio:      studio,
+			Seats:       seats,
+		}
+		bookingsWithDetails = append(bookingsWithDetails, bookingDetail)
+	}
+
+	return bookingsWithDetails, nil
 }

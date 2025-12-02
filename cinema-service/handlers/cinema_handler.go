@@ -2,12 +2,18 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"cinema-service/models"
 	"cinema-service/services"
 
 	"github.com/gin-gonic/gin"
 )
+
+type GetSeatsByIDsRequest struct {
+	SeatIDs []uint `json:"seat_ids"`
+}
+
 
 func GetStudios(c *gin.Context) {
 	studios, err := services.GetAllStudios()
@@ -65,4 +71,36 @@ func ReleaseSeats(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Seats released successfully"})
+}
+
+func GetStudioByID(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid studio ID"})
+		return
+	}
+
+	studio, err := services.GetStudioByID(uint(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Studio not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, studio)
+}
+
+func GetSeatsByIDs(c *gin.Context) {
+	var req GetSeatsByIDsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	seats, err := services.GetSeatsByIDs(req.SeatIDs)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get seats"})
+		return
+	}
+
+	c.JSON(http.StatusOK, seats)
 }
